@@ -1,11 +1,11 @@
-<script>
+<script lang="ts">
+	import Commandline from "./Commandline.svelte";
+
     let port;
     let writer;
     let output = "";
     let inputValue = "";
     const textDecoder = new TextDecoderStream();
-    let commandHistory = [];
-    let historyIndex = -1;
 
     async function connectSerial() {
         try {
@@ -42,40 +42,9 @@
         }
     }
 
-    async function sendMessage(event) {
-        if (event.key === "Enter" && writer) {
-            event.preventDefault();
-            // Send the input value over the serial connection
-            const message = inputValue + '\n';
-            await writer.write(new TextEncoder().encode(message));
-
-            // Add message to command history
-            commandHistory.push(inputValue);
-            historyIndex = commandHistory.length; // Reset history index
-
-            // Append the command to output
-            output += `> ${inputValue}\n`;
-
-            // Clear input value
-            inputValue = '';
-        }
-    }
-
-    function navigateHistory(event) {
-        if (event.key === "ArrowUp") {
-            if (historyIndex > 0) {
-                historyIndex--;
-                inputValue = commandHistory[historyIndex];
-            }
-        } else if (event.key === "ArrowDown") {
-            if (historyIndex < commandHistory.length - 1) {
-                historyIndex++;
-                inputValue = commandHistory[historyIndex];
-            } else {
-                historyIndex = commandHistory.length;
-                inputValue = '';
-            }
-        }
+    async function sendMessage(command: string) {
+        const message = command + '\n';
+        await writer.write(new TextEncoder().encode(message));
     }
 </script>
 
@@ -87,16 +56,7 @@
     <div>
         <textarea readonly bind:value={output} style="width: 100%; height: 200px; border: 1px solid black; padding: 5px;"></textarea>
     </div>
-    <div>
-        <input
-            type="text"
-            placeholder="Type a message and press Enter"
-            bind:value={inputValue}
-            on:keypress={sendMessage}
-            on:keydown={navigateHistory}
-            style="width: 100%;"
-        />
-    </div>
+    <Commandline onSubmit={sendMessage} />
 </main>
 
 <style>
