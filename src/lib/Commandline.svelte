@@ -7,7 +7,9 @@
 	function handleSubmit(event: Event) {
 		event.preventDefault();
 		if (commandInput.trim()) {
-			commandHistory = [commandInput, ...commandHistory];
+            if(commandHistory.length === 0 || commandHistory.at(-1) !== commandInput) {
+                commandHistory = [...commandHistory, commandInput];
+            }
 			onSubmit(commandInput);
 		}
 	}
@@ -26,11 +28,11 @@
 	}
 </script>
 
-<div class="mx-auto flex w-full max-w-xl flex-col rounded-md bg-gray-900 p-4 font-mono text-white">
+<div class="mx-auto flex w-full flex-col rounded-md bg-gray-900 p-4 font-mono text-white text-xs">
 	<ul class="command-list mb-2 flex-grow space-y-1 overflow-y-auto">
-		{#each commandHistory as command, index (command)}
+		{#each commandHistory as command, index (index)}
 			<li class="command-item">
-				<span>$ {command}</span>
+				<span>{command}</span>
 				<div class="command-buttons">
 					<button class="icon-button" on:click={() => populateCommand(command)} title="Edit">
 						<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">

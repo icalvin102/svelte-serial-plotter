@@ -63,7 +63,6 @@
     main {
         font-family: Arial, sans-serif;
         margin: 0 auto;
-        max-width: 600px;
         text-align: center;
     }
     textarea {
