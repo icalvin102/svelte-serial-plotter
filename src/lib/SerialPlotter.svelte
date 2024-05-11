@@ -2,15 +2,18 @@
 	import { onMount } from 'svelte';
 	import Commandline from './Commandline.svelte';
 	import Plot from './Plot.svelte';
+	import { createLine, type Line } from './line';
 
 	let port: SerialPort | null;
 	let writer: WritableStreamDefaultWriter<Uint8Array> | null;
 	const textDecoder = new TextDecoderStream();
 	let output = $state('');
+	let inputBuffer = '';
 	let connectionStatus = $state('Disconnected');
 	let availablePorts: SerialPort[] = $state([]);
 	let selectedPort: SerialPort | null = $state(null);
 	let baudRate = $state(115200);
+	let lines: Line[] = $state([createLine(), createLine()]);
 
 	const boudRates = [9600, 14400, 19200, 38400, 57600, 115200];
 
@@ -61,6 +64,36 @@
 		}
 	}
 
+	function handleIncomingData(value: string) {
+		value.trim();
+		if (value === 'clear') {
+			lines = [];
+			return;
+		}
+
+		const data = value
+			.split(',')
+			.map(parseFloat)
+			.filter((x) => !isNaN(x))
+			.forEach((x, i) => {
+				const line = lines[i] || (lines[i] = createLine());
+				line.data.push(x);
+			});
+	}
+
+	function handleIncomingDataRaw(value: string) {
+		const delimiter = '\r\n';
+		inputBuffer += value;
+
+		let i = inputBuffer.indexOf(delimiter);
+		while (i >= 0) {
+			handleIncomingData(inputBuffer.slice(0, i));
+			inputBuffer = inputBuffer.slice(i + 2);
+			i = inputBuffer.indexOf(delimiter);
+		}
+		output += value;
+	}
+
 	async function readLoop(reader: ReadableStreamDefaultReader<string>) {
 		try {
 			while (true) {
@@ -69,7 +102,7 @@
 					reader.releaseLock();
 					break;
 				}
-				output += value;
+				handleIncomingDataRaw(value);
 			}
 		} catch (error) {
 			console.error('Read error:', error);
@@ -80,24 +113,6 @@
 		const message = command + '\n';
 		if (!writer) return;
 		await writer.write(new TextEncoder().encode(message));
-	}
-
-	let t = $state(0);
-	onMount(() => {
-		const interval = setInterval(() => (t += 0.01), 1000 / 60);
-		return () => clearInterval(interval);
-	});
-
-	function generateLines(t: number = 0) {
-		const lines: Array<{ data: number[]; color: [number, number, number, number] }> = [
-			{ data: [], color: [1, 0, 0, 1] },
-			{ data: [], color: [0, 1, 0, 1] }
-		];
-		for (let i = 0; i < 1000; i++) {
-			lines[0].data.push(Math.sin(i * 0.1 + t));
-			lines[1].data.push(Math.cos(i * 0.1 + t));
-		}
-		return lines;
 	}
 </script>
 
@@ -128,6 +143,6 @@
 	<div class="mb-4 w-full max-w-md overflow-y-scroll">
 		<textarea readonly bind:value={output} class="h-48 w-full resize-none rounded border p-2" />
 	</div>
-	<Plot lines={generateLines(t)} class="block h-96 w-full rounded bg-slate-900" />
+	<Plot {lines} class="block h-96 w-full rounded bg-slate-900" />
 	<Commandline onSubmit={sendMessage} />
 </main>

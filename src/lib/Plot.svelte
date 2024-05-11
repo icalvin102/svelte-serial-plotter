@@ -1,12 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { onDestroy, onMount } from 'svelte';
-
-	// Types
-	interface Line {
-		data: number[];
-		color: [number, number, number, number];
-	}
+	import type { Line } from './line';
 
 	interface ProgramInfo {
 		program: WebGLProgram;
@@ -108,9 +103,6 @@
 			}
 		};
 
-		// Create buffers for each line
-		buffers = lines.map(() => gl!.createBuffer()!);
-
 		drawScene();
 	});
 
@@ -144,6 +136,7 @@
 
 		// Draw each line
 		lines.forEach((line, index) => {
+			const buffer = buffers[index] || (buffers[index] = gl!.createBuffer()!);
 			const { data } = line;
 			const vertices = new Float32Array(data.length * 2);
 
@@ -152,7 +145,7 @@
 				vertices[i * 2 + 1] = data[i];
 			}
 
-			gl!.bindBuffer(gl!.ARRAY_BUFFER, buffers[index]);
+			gl!.bindBuffer(gl!.ARRAY_BUFFER, buffer);
 			gl!.bufferData(gl!.ARRAY_BUFFER, vertices, gl!.DYNAMIC_DRAW);
 
 			gl!.uniform4fv(programInfo!.uniformLocations.color, line.color);
