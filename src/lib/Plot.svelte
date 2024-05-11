@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import { onDestroy, onMount } from 'svelte';
 
 	// Types
@@ -128,6 +129,7 @@
 	});
 
     onDestroy(() => {
+        if(!browser) return;
         clearTimeout(timeoutId);
         cancelAnimationFrame(animationFrameId);
     });
@@ -203,5 +205,5 @@
 	onMount(resize);
 </script>
 
-<svelte:window onresize={resize} onwheel={handleZoom} />
-<canvas bind:this={canvas} {...restProps}></canvas>
+<svelte:window onresize={resize} />
+<canvas bind:this={canvas} {...restProps} onwheel={handleZoom}></canvas>
