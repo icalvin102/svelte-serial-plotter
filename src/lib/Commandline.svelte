@@ -1,14 +1,36 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	const STORAGE_KEY = 'serialCommandHistory';
 	let { onSubmit }: { onSubmit: (command: string) => void } = $props();
 
 	let commandInput = $state('');
 	let commandHistory = $state<string[]>([]);
+
+	const storage = {
+		read() {
+			const data = localStorage.getItem(STORAGE_KEY);
+			if (data) {
+				commandHistory = JSON.parse(data);
+			}
+		},
+		write(data: string[]) {
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+		},
+		clear() {
+			localStorage.removeItem(STORAGE_KEY);
+		}
+	};
+
+	onMount(() => {
+		storage.read();
+	});
 
 	function handleSubmit(event: Event) {
 		event.preventDefault();
 		if (commandInput.trim()) {
 			if (commandHistory.length === 0 || commandHistory.at(-1) !== commandInput) {
 				commandHistory.push(commandInput);
+				storage.write(commandHistory);
 			}
 			onSubmit(commandInput);
 		}
@@ -25,6 +47,7 @@
 
 	function deleteCommand(index: number) {
 		commandHistory = commandHistory.filter((_, i) => i !== index);
+		storage.write(commandHistory);
 	}
 </script>
 
