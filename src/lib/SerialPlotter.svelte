@@ -110,6 +110,6 @@
 	<div class="mb-4 w-full max-w-md overflow-y-scroll">
 		<textarea readonly bind:value={output} class="h-48 w-full resize-none rounded border p-2" />
 	</div>
-	<Plot class="w-full h-96 block" />
+	<Plot class="w-full h-96 block bg-slate-900 rounded" />
 	<Commandline onSubmit={sendMessage} />
 </main>
