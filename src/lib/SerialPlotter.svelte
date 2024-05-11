@@ -25,41 +25,41 @@
 	});
 
 	async function connectSerial() {
-        try {
-            if (!selectedPort) {
-                selectedPort = await navigator.serial.requestPort();
-            }
-            port = selectedPort; // Assign the selected port to the port variable
-            await port.open({ baudRate });
+		try {
+			if (!selectedPort) {
+				selectedPort = await navigator.serial.requestPort();
+			}
+			port = selectedPort; // Assign the selected port to the port variable
+			await port.open({ baudRate });
 
-			if(!(port.readable && port.writable)) return;
-            const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
-            writer = port.writable.getWriter();
+			if (!(port.readable && port.writable)) return;
+			const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+			writer = port.writable.getWriter();
 
-            const reader = textDecoder.readable.getReader();
-            readLoop(reader);
+			const reader = textDecoder.readable.getReader();
+			readLoop(reader);
 
-            connectionStatus = 'Connected';
-        } catch (err) {
-            console.error('Connection error:', err);
-            connectionStatus = 'Error';
-        }
-    }
+			connectionStatus = 'Connected';
+		} catch (err) {
+			console.error('Connection error:', err);
+			connectionStatus = 'Error';
+		}
+	}
 
-    async function disconnectSerial() {
-        if (port && writer) {
-            try {
-                await writer.close();
-                await port.close();
-            } catch (err) {
-                console.error('Disconnection error:', err);
-            } finally {
-                writer = null;
-                port = null;
-                connectionStatus = 'Disconnected';
-            }
-        }
-    }
+	async function disconnectSerial() {
+		if (port && writer) {
+			try {
+				await writer.close();
+				await port.close();
+			} catch (err) {
+				console.error('Disconnection error:', err);
+			} finally {
+				writer = null;
+				port = null;
+				connectionStatus = 'Disconnected';
+			}
+		}
+	}
 
 	async function readLoop(reader: ReadableStreamDefaultReader<string>) {
 		try {
@@ -78,8 +78,26 @@
 
 	async function sendMessage(command: string) {
 		const message = command + '\n';
-		if(!writer) return;
+		if (!writer) return;
 		await writer.write(new TextEncoder().encode(message));
+	}
+
+	let t = $state(0);
+	onMount(() => {
+		const interval = setInterval(() => (t += 0.01), 1000 / 60);
+		return () => clearInterval(interval);
+	});
+
+	function generateLines(t: number = 0) {
+		const lines: Array<{ data: number[]; color: [number, number, number, number] }> = [
+			{ data: [], color: [1, 0, 0, 1] },
+			{ data: [], color: [0, 1, 0, 1] }
+		];
+		for (let i = 0; i < 100; i++) {
+			lines[0].data.push(Math.sin(i * 0.1 + t));
+			lines[1].data.push(Math.cos(i * 0.1 + t));
+		}
+		return lines;
 	}
 </script>
 
@@ -110,6 +128,6 @@
 	<div class="mb-4 w-full max-w-md overflow-y-scroll">
 		<textarea readonly bind:value={output} class="h-48 w-full resize-none rounded border p-2" />
 	</div>
-	<Plot class="w-full h-96 block bg-slate-900 rounded" />
+	<Plot lines={generateLines(t)} class="block h-96 w-full rounded bg-slate-900" />
 	<Commandline onSubmit={sendMessage} />
 </main>
