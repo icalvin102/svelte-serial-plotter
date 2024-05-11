@@ -1,73 +1,115 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import Commandline from './Commandline.svelte';
 	import Plot from './Plot.svelte';
 
-    let port;
-    let writer;
-    let output = "";
-    let inputValue = "";
-    const textDecoder = new TextDecoderStream();
+	let port: SerialPort | null;
+	let writer: WritableStreamDefaultWriter<Uint8Array> | null;
+	let output = '';
+	let connectionStatus = 'Disconnected';
+	const textDecoder = new TextDecoderStream();
+	let availablePorts: SerialPort[] = [];
+	let selectedPort: SerialPort | null = null;
+	let baudRate = 115200;
 
-    async function connectSerial() {
+	const boudRates = [9600, 14400, 19200, 38400, 57600, 115200];
+
+	// Fetch available serial ports on component mount
+	onMount(async () => {
+		if ('serial' in navigator) {
+			availablePorts = await navigator.serial.getPorts();
+			if (availablePorts.length > 0) {
+				selectedPort = availablePorts[0];
+			}
+		}
+	});
+
+	async function connectSerial() {
         try {
-            // Request a serial port
-            port = await navigator.serial.requestPort();
-            // Open the serial port with a specified baud rate
-            await port.open({ baudRate: 115200 });
+            if (!selectedPort) {
+                selectedPort = await navigator.serial.requestPort();
+            }
+            port = selectedPort; // Assign the selected port to the port variable
+            await port.open({ baudRate });
 
-            // Set up the reader and writer
+			if(!(port.readable && port.writable)) return;
             const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
             writer = port.writable.getWriter();
 
-            // Read serial data and append it to the output string
             const reader = textDecoder.readable.getReader();
             readLoop(reader);
 
+            connectionStatus = 'Connected';
         } catch (err) {
             console.error('Connection error:', err);
+            connectionStatus = 'Error';
         }
     }
 
-    async function readLoop(reader) {
-        try {
-            while (true) {
-                const { value, done } = await reader.read();
-                if (done) {
-                    reader.releaseLock();
-                    break;
-                }
-                output += value;
+    async function disconnectSerial() {
+        if (port && writer) {
+            try {
+                await writer.close();
+                await port.close();
+            } catch (err) {
+                console.error('Disconnection error:', err);
+            } finally {
+                writer = null;
+                port = null;
+                connectionStatus = 'Disconnected';
             }
-        } catch (error) {
-            console.error('Read error:', error);
         }
     }
 
-    async function sendMessage(command: string) {
-        const message = command + '\n';
-        await writer.write(new TextEncoder().encode(message));
-    }
+	async function readLoop(reader: ReadableStreamDefaultReader<string>) {
+		try {
+			while (true) {
+				const { value, done } = await reader.read();
+				if (done) {
+					reader.releaseLock();
+					break;
+				}
+				output += value;
+			}
+		} catch (error) {
+			console.error('Read error:', error);
+		}
+	}
+
+	async function sendMessage(command: string) {
+		const message = command + '\n';
+		if(!writer) return;
+		await writer.write(new TextEncoder().encode(message));
+	}
 </script>
 
-<main>
-    <h1>Serial Communication</h1>
-    <div>
-        <button on:click={connectSerial}>Connect to Serial Device</button>
-    </div>
-    <div>
-        <textarea readonly bind:value={output} style="width: 100%; height: 200px; border: 1px solid black; padding: 5px;"></textarea>
-    </div>
-	<Plot class="w-full h-96 block" />
-    <Commandline onSubmit={sendMessage} />
-</main>
+<main class="flex flex-col items-center p-4">
+	<h1 class="mb-4 text-2xl font-bold">Serial Communication</h1>
 
-<style>
-    main {
-        font-family: Arial, sans-serif;
-        margin: 0 auto;
-        text-align: center;
-    }
-    textarea {
-        overflow-y: scroll;
-    }
-</style>
+	<div class="mb-4 flex w-full max-w-md flex-row items-center space-x-2">
+		<select bind:value={selectedPort} class="flex-1 rounded border p-1">
+			{#each availablePorts as port, index}
+				<option value={port}>{`Port ${index + 1}`}</option>
+			{/each}
+		</select>
+		<select bind:value={baudRate} class="flex-1 rounded border p-1">
+			{#each boudRates as value}
+				<option {value}>{value}</option>
+			{/each}
+		</select>
+		{#if connectionStatus === 'Connected'}
+			<button on:click={disconnectSerial} class="rounded bg-red-500 p-2 text-white"
+				>Disconnect</button
+			>
+		{:else}
+			<button on:click={connectSerial} class="rounded bg-blue-500 p-2 text-white">Connect</button>
+		{/if}
+	</div>
+	<p class="mt-2">Status: {connectionStatus}</p>
+
+	<div class="mb-4 w-full max-w-md overflow-y-scroll">
+		<textarea readonly bind:value={output} class="h-48 w-full resize-none rounded border p-2" />
+	</div>
+	<Plot class="w-full h-96 block" />
+	<Commandline onSubmit={sendMessage} />
+</main>
