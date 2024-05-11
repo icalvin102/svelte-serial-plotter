@@ -139,16 +139,6 @@
 		}
 	}
 
-	function updateBuffer(buffer: WebGLBuffer, newData: number[]) {
-		const startIdx = Math.max(0, newData.length - maxPoints) * 2;
-		for (let i = 0; i < newData.length && startIdx + i * 2 < vertices.length; i++) {
-			vertices[startIdx + i * 2] = (i / newData.length - 0.5) * 2;
-			vertices[startIdx + i * 2 + 1] = newData[i];
-		}
-		gl!.bindBuffer(gl!.ARRAY_BUFFER, buffer);
-		gl!.bufferData(gl!.ARRAY_BUFFER, vertices, gl!.DYNAMIC_DRAW);
-	}
-
 	function drawScene() {
 		gl!.clear(gl!.COLOR_BUFFER_BIT);
 
@@ -157,7 +147,15 @@
 
 		// Draw each line
 		lines.forEach((line, index) => {
-			updateBuffer(buffers[index], line.data);
+			const { data } = line;
+			const startIdx = Math.max(0, data.length - maxPoints) * 2;
+			for (let i = 0; i < data.length && startIdx + i * 2 < vertices.length; i++) {
+				vertices[startIdx + i * 2] = (i / data.length - 0.5) * 2;
+				vertices[startIdx + i * 2 + 1] = data[i];
+			}
+			gl!.bindBuffer(gl!.ARRAY_BUFFER, buffers[index]);
+			gl!.bufferData(gl!.ARRAY_BUFFER, vertices, gl!.DYNAMIC_DRAW);
+
 			gl!.uniform4fv(programInfo!.uniformLocations.color, line.color);
 			gl!.vertexAttribPointer(
 				programInfo!.attribLocations.vertexPosition,
