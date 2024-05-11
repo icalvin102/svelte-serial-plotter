@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Commandline from "./Commandline.svelte";
+	import Plot from './Plot.svelte';
 
     let port;
     let writer;
@@ -56,6 +56,7 @@
     <div>
         <textarea readonly bind:value={output} style="width: 100%; height: 200px; border: 1px solid black; padding: 5px;"></textarea>
     </div>
+	<Plot class="w-full h-96 block" />
     <Commandline onSubmit={sendMessage} />
 </main>
 
