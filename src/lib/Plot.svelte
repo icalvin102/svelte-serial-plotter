@@ -14,8 +14,7 @@
 			vertexPosition: number;
 		};
 		uniformLocations: {
-			zoomX: WebGLUniformLocation | null;
-			zoomY: WebGLUniformLocation | null;
+			zoom: WebGLUniformLocation | null;
 			color: WebGLUniformLocation | null;
 		};
 	}
@@ -24,14 +23,13 @@
 
 	let canvas = $state<HTMLCanvasElement>();
 	let gl: WebGLRenderingContext | null = null;
-	let zoomX = 1.0,
-		zoomY = 1.0;
+	let zoom = { x: 1.0, y: 1.0 };
 	const maxPoints = 100;
 	const vertices = new Float32Array(maxPoints * 2);
 	let shaderProgram: WebGLProgram | null = null;
 	let programInfo: ProgramInfo | null = null;
 	let buffers: WebGLBuffer[] = [];
-    let animationFrameId: number;
+	let animationFrameId: number;
 
 	onMount(() => {
 		// Initialize WebGL context
@@ -48,10 +46,9 @@
 		// Vertex shader source code with zooming
 		const vsSource = `
         attribute vec2 aVertexPosition;
-        uniform float uZoomX;
-        uniform float uZoomY;
+        uniform vec2 uZoom;
         void main(void) {
-            gl_Position = vec4(aVertexPosition.x * uZoomX, aVertexPosition.y * uZoomY, 0.0, 1.0);
+            gl_Position = vec4(aVertexPosition * uZoom, 0.0, 1.0);
         }
       `;
 
@@ -109,8 +106,7 @@
 				vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition')
 			},
 			uniformLocations: {
-				zoomX: gl.getUniformLocation(shaderProgram, 'uZoomX'),
-				zoomY: gl.getUniformLocation(shaderProgram, 'uZoomY'),
+				zoom: gl.getUniformLocation(shaderProgram, 'uZoom'),
 				color: gl.getUniformLocation(shaderProgram, 'uColor')
 			}
 		};
@@ -121,10 +117,10 @@
 		drawScene();
 	});
 
-    onDestroy(() => {
+	onDestroy(() => {
 		if (!browser) return;
-        cancelAnimationFrame(animationFrameId);
-    });
+		cancelAnimationFrame(animationFrameId);
+	});
 
 	function resize() {
 		if (!canvas) return;
@@ -137,9 +133,9 @@
 	function handleZoom(event: WheelEvent) {
 		const zoomFactor = 0.05;
 		if (event.shiftKey) {
-			zoomX *= event.deltaY > 0 ? 1 + zoomFactor : 1 - zoomFactor;
+			zoom.x *= event.deltaY > 0 ? 1 + zoomFactor : 1 - zoomFactor;
 		} else {
-			zoomY *= event.deltaY > 0 ? 1 + zoomFactor : 1 - zoomFactor;
+			zoom.y *= event.deltaY > 0 ? 1 + zoomFactor : 1 - zoomFactor;
 		}
 	}
 
@@ -157,8 +153,7 @@
 		gl!.clear(gl!.COLOR_BUFFER_BIT);
 
 		gl!.useProgram(programInfo!.program);
-		gl!.uniform1f(programInfo!.uniformLocations.zoomX, zoomX);
-		gl!.uniform1f(programInfo!.uniformLocations.zoomY, zoomY);
+		gl!.uniform2fv(programInfo!.uniformLocations.zoom, [zoom.x, zoom.y]);
 
 		// Draw each line
 		lines.forEach((line, index) => {
