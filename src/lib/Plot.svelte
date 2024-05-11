@@ -20,13 +20,8 @@
 		};
 	}
 
-	// Store to track all lines (array of arrays) and their colors
-	const lines: Line[] = [
-		{ data: [], color: [1.0, 0.0, 0.0, 1.0] }, // Red line
-		{ data: [], color: [0.0, 1.0, 0.0, 1.0] } // Green line
-	];
+	let { lines = [], ...restProps }: { lines: Line[] } = $props();
 
-    let { ...restProps } = $props();
 	let canvas = $state<HTMLCanvasElement>();
 	let gl: WebGLRenderingContext | null = null;
 	let zoomX = 1.0,
@@ -36,7 +31,6 @@
 	let shaderProgram: WebGLProgram | null = null;
 	let programInfo: ProgramInfo | null = null;
 	let buffers: WebGLBuffer[] = [];
-    let timeoutId: number;
     let animationFrameId: number;
 
 	onMount(() => {
@@ -125,12 +119,10 @@
 		buffers = lines.map(() => gl!.createBuffer()!);
 
 		drawScene();
-		generateData();
 	});
 
     onDestroy(() => {
-        if(!browser) return;
-        clearTimeout(timeoutId);
+		if (!browser) return;
         cancelAnimationFrame(animationFrameId);
     });
 
@@ -184,22 +176,7 @@
 			gl!.drawArrays(gl!.LINE_STRIP, 0, line.data.length);
 		});
 
-		requestAnimationFrame(drawScene);
-	}
-
-	function generateData() {
-		let counter = 0;
-		function updateLines() {
-			for (let i = 0; i < 1; i++) {
-				lines[0].data.push(Math.sin(counter * 0.1));
-				lines[1].data.push(Math.cos(counter * 0.1));
-				if (lines[0].data.length > maxPoints) lines[0].data.shift();
-				if (lines[1].data.length > maxPoints) lines[1].data.shift();
-				counter++;
-			}
-			timeoutId = setTimeout(updateLines, 1000 / 60);
-		}
-		updateLines();
+		animationFrameId = requestAnimationFrame(drawScene);
 	}
 
 	onMount(resize);
