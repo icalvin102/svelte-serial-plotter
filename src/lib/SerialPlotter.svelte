@@ -5,12 +5,12 @@
 
 	let port: SerialPort | null;
 	let writer: WritableStreamDefaultWriter<Uint8Array> | null;
-	let output = '';
-	let connectionStatus = 'Disconnected';
 	const textDecoder = new TextDecoderStream();
-	let availablePorts: SerialPort[] = [];
-	let selectedPort: SerialPort | null = null;
-	let baudRate = 115200;
+	let output = $state('');
+	let connectionStatus = $state('Disconnected');
+	let availablePorts: SerialPort[] = $state([]);
+	let selectedPort: SerialPort | null = $state(null);
+	let baudRate = $state(115200);
 
 	const boudRates = [9600, 14400, 19200, 38400, 57600, 115200];
 
@@ -93,7 +93,7 @@
 			{ data: [], color: [1, 0, 0, 1] },
 			{ data: [], color: [0, 1, 0, 1] }
 		];
-		for (let i = 0; i < 100; i++) {
+		for (let i = 0; i < 1000; i++) {
 			lines[0].data.push(Math.sin(i * 0.1 + t));
 			lines[1].data.push(Math.cos(i * 0.1 + t));
 		}
@@ -116,11 +116,11 @@
 			{/each}
 		</select>
 		{#if connectionStatus === 'Connected'}
-			<button on:click={disconnectSerial} class="rounded bg-red-500 p-2 text-white"
+			<button onclick={disconnectSerial} class="rounded bg-red-500 p-2 text-white"
 				>Disconnect</button
 			>
 		{:else}
-			<button on:click={connectSerial} class="rounded bg-blue-500 p-2 text-white">Connect</button>
+			<button onclick={connectSerial} class="rounded bg-blue-500 p-2 text-white">Connect</button>
 		{/if}
 	</div>
 	<p class="mt-2">Status: {connectionStatus}</p>
