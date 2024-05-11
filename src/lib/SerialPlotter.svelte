@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Commandline from './Commandline.svelte';
 	import Plot from './Plot.svelte';
 
     let port;
