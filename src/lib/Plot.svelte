@@ -16,7 +16,7 @@
 
 	let { lines = [], ...restProps }: { lines: Line[] } = $props();
 	let canvas = $state<HTMLCanvasElement>();
-	let gl: WebGLRenderingContext | null = null;
+	let gl: WebGL2RenderingContext | null = null;
 	let zoom = { x: 1.0, y: 1.0 };
 	let shaderProgram: WebGLProgram | null = null;
 	let programInfo: ProgramInfo | null = null;
@@ -25,36 +25,34 @@
 	let mousePressed = false;
 
 	onMount(() => {
-		// Initialize WebGL context
 		if (!canvas) return;
-		gl =
-			canvas.getContext('webgl') ||
-			(canvas.getContext('experimental-webgl') as WebGLRenderingContext | null);
+		gl = canvas.getContext('webgl2') as WebGL2RenderingContext | null;
 
 		if (!gl) {
-			alert('WebGL is not supported on your browser!');
+			alert('WebGL 2.0 is not supported on your browser!');
 			return;
 		}
 
-		// Vertex shader source code with zooming
-		const vsSource = `
-        attribute vec2 aVertexPosition;
-        uniform vec2 uZoom;
-        void main(void) {
-          gl_Position = vec4(aVertexPosition * uZoom, 0.0, 1.0);
-        }
-      `;
+		const vsSource = `#version 300 es
+            precision highp float;
 
-		// Fragment shader source code
-		const fsSource = `
-        precision mediump float;
-        uniform vec4 uColor;
-        void main(void) {
-          gl_FragColor = uColor;
-        }
-      `;
+            in vec2 aVertexPosition;
+            uniform vec2 uZoom;
+            void main(void) {
+                gl_Position = vec4(aVertexPosition * uZoom, 0.0, 1.0);
+            }
+        `;
 
-		// Compile shader programs
+		const fsSource = `#version 300 es
+            precision highp float;
+
+            out vec4 fragColor;
+            uniform vec4 uColor;
+            void main(void) {
+                fragColor = uColor;
+            }
+        `;
+
 		function compileShader(type: number, source: string): WebGLShader | null {
 			if (!gl) return null;
 			const shader = gl.createShader(type);
@@ -70,7 +68,6 @@
 			return shader;
 		}
 
-		// Initialize the shader program
 		function initShaderProgram(vsSource: string, fsSource: string): WebGLProgram | null {
 			const vertexShader = compileShader(gl!.VERTEX_SHADER, vsSource);
 			const fragmentShader = compileShader(gl!.FRAGMENT_SHADER, fsSource);
@@ -114,7 +111,6 @@
 
 	function resize() {
 		if (!canvas) return;
-		// Resize the canvas according to its container size
 		canvas.width = canvas.clientWidth;
 		canvas.height = canvas.clientHeight;
 		gl!.viewport(0, 0, gl!.drawingBufferWidth, gl!.drawingBufferHeight);
@@ -128,7 +124,6 @@
 		gl!.useProgram(programInfo!.program);
 		gl!.uniform2fv(programInfo!.uniformLocations.zoom, [zoom.x, zoom.y]);
 
-		// Draw each line
 		lines.forEach((line, index) => {
 			const buffer = buffers[index] || (buffers[index] = gl!.createBuffer()!);
 			const { data } = line;
