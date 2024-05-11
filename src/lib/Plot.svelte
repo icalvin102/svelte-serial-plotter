@@ -22,6 +22,7 @@
 	let programInfo: ProgramInfo | null = null;
 	let buffers: WebGLBuffer[] = [];
 	let animationFrameId: number;
+	let mousePressed = false;
 
 	onMount(() => {
 		// Initialize WebGL context
@@ -119,14 +120,7 @@
 		gl!.viewport(0, 0, gl!.drawingBufferWidth, gl!.drawingBufferHeight);
 	}
 
-	function handleZoom(event: WheelEvent) {
-		const zoomFactor = 0.05;
-		if (event.shiftKey) {
-			zoom.x *= event.deltaY > 0 ? 1 + zoomFactor : 1 - zoomFactor;
-		} else {
-			zoom.y *= event.deltaY > 0 ? 1 + zoomFactor : 1 - zoomFactor;
-		}
-	}
+	function handleZoom(event: WheelEvent) {}
 
 	function drawScene() {
 		gl!.clear(gl!.COLOR_BUFFER_BIT);
@@ -165,7 +159,27 @@
 	}
 
 	onMount(resize);
+
+	function handleMouseMove(e: MouseEvent) {
+		if (!mousePressed) return;
+		const zoomFactor = 0.005;
+
+		if (e.shiftKey) {
+			zoom.x = Math.max(0.02, zoomFactor * e.movementX + zoom.x);
+			zoom.y = Math.max(0.02, zoomFactor * e.movementY + zoom.y);
+		} else {
+		}
+	}
 </script>
 
-<svelte:window onresize={resize} />
-<canvas bind:this={canvas} {...restProps} onwheel={handleZoom}></canvas>
+<svelte:window
+	onresize={resize}
+	onmousemove={handleMouseMove}
+	onmouseup={() => (mousePressed = false)}
+/>
+<canvas
+	bind:this={canvas}
+	{...restProps}
+	onwheel={handleZoom}
+	onmousedown={() => (mousePressed = true)}
+></canvas>
