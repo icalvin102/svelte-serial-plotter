@@ -20,12 +20,9 @@
 	}
 
 	let { lines = [], ...restProps }: { lines: Line[] } = $props();
-
 	let canvas = $state<HTMLCanvasElement>();
 	let gl: WebGLRenderingContext | null = null;
 	let zoom = { x: 1.0, y: 1.0 };
-	const maxPoints = 100;
-	const vertices = new Float32Array(maxPoints * 2);
 	let shaderProgram: WebGLProgram | null = null;
 	let programInfo: ProgramInfo | null = null;
 	let buffers: WebGLBuffer[] = [];
@@ -48,7 +45,7 @@
         attribute vec2 aVertexPosition;
         uniform vec2 uZoom;
         void main(void) {
-            gl_Position = vec4(aVertexPosition * uZoom, 0.0, 1.0);
+          gl_Position = vec4(aVertexPosition * uZoom, 0.0, 1.0);
         }
       `;
 
@@ -57,7 +54,7 @@
         precision mediump float;
         uniform vec4 uColor;
         void main(void) {
-            gl_FragColor = uColor;
+          gl_FragColor = uColor;
         }
       `;
 
@@ -148,11 +145,13 @@
 		// Draw each line
 		lines.forEach((line, index) => {
 			const { data } = line;
-			const startIdx = Math.max(0, data.length - maxPoints) * 2;
-			for (let i = 0; i < data.length && startIdx + i * 2 < vertices.length; i++) {
-				vertices[startIdx + i * 2] = (i / data.length - 0.5) * 2;
-				vertices[startIdx + i * 2 + 1] = data[i];
+			const vertices = new Float32Array(data.length * 2);
+
+			for (let i = 0; i < data.length; i++) {
+				vertices[i * 2] = (i / data.length - 0.5) * 2;
+				vertices[i * 2 + 1] = data[i];
 			}
+
 			gl!.bindBuffer(gl!.ARRAY_BUFFER, buffers[index]);
 			gl!.bufferData(gl!.ARRAY_BUFFER, vertices, gl!.DYNAMIC_DRAW);
 
@@ -166,7 +165,7 @@
 				0
 			);
 			gl!.enableVertexAttribArray(programInfo!.attribLocations.vertexPosition);
-			gl!.drawArrays(gl!.LINE_STRIP, 0, line.data.length);
+			gl!.drawArrays(gl!.LINE_STRIP, 0, data.length);
 		});
 
 		animationFrameId = requestAnimationFrame(drawScene);
