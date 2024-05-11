@@ -118,7 +118,7 @@
 	}
 </script>
 
-<main class="grid grid-cols-6 p-4 gap-2">
+<main class="grid grid-cols-6 gap-2 p-4">
 	<div class="col-span-2 flex flex-col">
 		<h1 class="mb-4 text-2xl font-bold">Serial Communication</h1>
 
@@ -138,14 +138,19 @@
 					>Disconnect</button
 				>
 			{:else}
-				<button onclick={connectSerial} class="rounded bg-blue-500 px-2 py-1 text-white">Connect</button>
+				<button onclick={connectSerial} class="rounded bg-blue-500 px-2 py-1 text-white"
+					>Connect</button
+				>
 			{/if}
 		</div>
 
-		<textarea readonly class="h-48 w-full resize-none rounded border p-2 mb-auto flex-grow text-xs bg-slate-900 text-white">{output}</textarea>
+		<textarea
+			readonly
+			class="mb-auto h-48 w-full flex-grow resize-none rounded border bg-slate-900 p-2 text-xs text-white"
+			>{output}</textarea
+		>
 	</div>
 
-	<Plot {lines} class="block h-96 w-full rounded bg-slate-900 col-span-4" />
+	<Plot {lines} class="col-span-4 block h-96 w-full rounded bg-slate-900" />
 	<div class="col-span-full"><Commandline onSubmit={sendMessage} /></div>
-	
 </main>
