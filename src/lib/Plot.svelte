@@ -10,7 +10,7 @@
 			vertexPosition: number;
 		};
 		uniformLocations: {
-			zoom: WebGLUniformLocation | null;
+			transform: WebGLUniformLocation | null;
 			color: WebGLUniformLocation | null;
 		};
 	}
@@ -18,12 +18,10 @@
 	let { lines = [], ...restProps }: { lines: Line[] } & HTMLCanvasAttributes = $props();
 	let canvas = $state<HTMLCanvasElement>();
 	let gl: WebGL2RenderingContext | null = null;
-	let zoom = { x: 1.0, y: 1.0 };
 	let shaderProgram: WebGLProgram | null = null;
 	let programInfo: ProgramInfo | null = null;
 	let buffers: WebGLBuffer[] = [];
 	let animationFrameId: number;
-	let mousePressed = false;
 
 	onMount(() => {
 		if (!canvas) return;
@@ -38,9 +36,10 @@
             precision highp float;
 
             in vec2 aVertexPosition;
-            uniform vec2 uZoom;
+            uniform mat3 uTransform;
             void main(void) {
-                gl_Position = vec4(aVertexPosition * uZoom, 0.0, 1.0);
+                vec3 pos = vec3(aVertexPosition, 1.0);
+                gl_Position = vec4(uTransform * pos, 1.0);
             }
         `;
 
@@ -97,11 +96,12 @@
 				vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition')
 			},
 			uniformLocations: {
-				zoom: gl.getUniformLocation(shaderProgram, 'uZoom'),
+				transform: gl.getUniformLocation(shaderProgram, 'uTransform'),
 				color: gl.getUniformLocation(shaderProgram, 'uColor')
 			}
 		};
 
+		resize();
 		drawScene();
 	});
 
@@ -117,13 +117,11 @@
 		gl!.viewport(0, 0, gl!.drawingBufferWidth, gl!.drawingBufferHeight);
 	}
 
-	function handleZoom(event: WheelEvent) {}
-
 	function drawScene() {
 		gl!.clear(gl!.COLOR_BUFFER_BIT);
 
 		gl!.useProgram(programInfo!.program);
-		gl!.uniform2fv(programInfo!.uniformLocations.zoom, [zoom.x, zoom.y]);
+		gl!.uniformMatrix3fv(programInfo!.uniformLocations.transform, false, getTransformMatrix());
 
 		lines.forEach((line, index) => {
 			const buffer = buffers[index] || (buffers[index] = gl!.createBuffer()!);
@@ -154,28 +152,46 @@
 		animationFrameId = requestAnimationFrame(drawScene);
 	}
 
-	onMount(resize);
+	const scaleFactor = 0.5;
+	// Initial transformation state
+	let scale = { x: scaleFactor, y: scaleFactor }; // Individual zoom levels
+	let pan = { x: 0.0, y: 0.0 }; // Pan translation
+	let startPosition = { x: 0, y: 0 };
+	let panOffset = { x: 0, y: 0 };
+	let isDragging = false;
 
-	function handleMouseMove(e: MouseEvent) {
-		if (!mousePressed) return;
-		const zoomFactor = 0.005;
+	function updatePanOffset(event: MouseEvent) {
+		const x = (event.clientX - startPosition.x) / (canvas.clientWidth * 0.5);
+		const y = (event.clientY - startPosition.y) / (canvas.clientHeight * 0.5);
+		panOffset = { x, y };
+	}
 
-		if (e.shiftKey) {
-			zoom.x = Math.max(0.02, zoomFactor * e.movementX + zoom.x);
-			zoom.y = Math.max(0.02, zoomFactor * e.movementY + zoom.y);
-		} else {
-		}
+	function getTransformMatrix() {
+		const sx = scale.x;
+		const sy = scale.y;
+		const tx = pan.x + panOffset.x;
+		const ty = pan.y - panOffset.y;
+		return new Float32Array([sx, 0, 0, 0, sy, 0, tx, ty, 1]);
+	}
+
+	function handleMousedown(event: MouseEvent) {
+		startPosition.x = event.clientX;
+		startPosition.y = event.clientY;
+		isDragging = true;
+	}
+
+	function handleMousemove(event: MouseEvent) {
+		if (!isDragging || !canvas) return;
+		updatePanOffset(event);
+	}
+
+	function handleMouseup() {
+		pan.x += panOffset.x;
+		pan.y -= panOffset.y;
+		panOffset = { x: 0, y: 0 };
+		isDragging = false;
 	}
 </script>
 
-<svelte:window
-	onresize={resize}
-	onmousemove={handleMouseMove}
-	onmouseup={() => (mousePressed = false)}
-/>
-<canvas
-	bind:this={canvas}
-	{...restProps}
-	onwheel={handleZoom}
-	onmousedown={() => (mousePressed = true)}
-></canvas>
+<svelte:window onresize={resize} onmousemove={handleMousemove} onmouseup={handleMouseup} />
+<canvas bind:this={canvas} {...restProps} onmousedown={handleMousedown}></canvas>
