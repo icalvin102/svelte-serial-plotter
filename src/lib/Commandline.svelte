@@ -28,7 +28,7 @@
 	function handleSubmit(event: Event) {
 		event.preventDefault();
 		if (commandInput.trim()) {
-			if (commandHistory.length === 0 || commandHistory.at(-1) !== commandInput) {
+			if (commandHistory.indexOf(commandInput) < 0) {
 				commandHistory.push(commandInput);
 				storage.write(commandHistory);
 			}
