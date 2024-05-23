@@ -152,12 +152,12 @@
 		animationFrameId = requestAnimationFrame(drawScene);
 	}
 
-	const scaleFactor = 0.5;
 	// Initial transformation state
-	let scale = { x: scaleFactor, y: scaleFactor }; // Individual zoom levels
+	let scale = { x: 1, y: 1 }; // Individual zoom levels
 	let pan = { x: 0.0, y: 0.0 }; // Pan translation
 	let startPosition = { x: 0, y: 0 };
 	let panOffset = { x: 0, y: 0 };
+	let scaleOffset = { x: 0, y: 0 };
 	let isDragging = false;
 
 	function updatePanOffset(event: MouseEvent) {
@@ -166,9 +166,16 @@
 		panOffset = { x, y };
 	}
 
+	function updateScaleOffset(event: MouseEvent) {
+		const scaleFactor = 1.0 / 500.0;
+		const x = (event.clientX - startPosition.x) * scaleFactor;
+		const y = (event.clientY - startPosition.y) * scaleFactor;
+		scaleOffset = { x, y };
+	}
+
 	function getTransformMatrix() {
-		const sx = scale.x;
-		const sy = scale.y;
+		const sx = scale.x + scaleOffset.x;
+		const sy = scale.y - scaleOffset.y;
 		const tx = pan.x + panOffset.x;
 		const ty = pan.y - panOffset.y;
 		return new Float32Array([sx, 0, 0, 0, sy, 0, tx, ty, 1]);
@@ -177,18 +184,30 @@
 	function handleMousedown(event: MouseEvent) {
 		startPosition.x = event.clientX;
 		startPosition.y = event.clientY;
+		updatePanOffset(event);
+		updateScaleOffset(event);
 		isDragging = true;
 	}
 
 	function handleMousemove(event: MouseEvent) {
 		if (!isDragging || !canvas) return;
-		updatePanOffset(event);
+		event.preventDefault();
+		if (event.shiftKey) {
+			updateScaleOffset(event);
+		} else {
+			updatePanOffset(event);
+		}
 	}
 
 	function handleMouseup() {
 		pan.x += panOffset.x;
 		pan.y -= panOffset.y;
 		panOffset = { x: 0, y: 0 };
+
+		scale.x += scaleOffset.x;
+		scale.y -= scaleOffset.y;
+		scaleOffset = { x: 0, y: 0 };
+
 		isDragging = false;
 	}
 </script>
