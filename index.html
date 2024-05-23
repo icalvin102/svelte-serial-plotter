@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="./favicon.png" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		
+		<link href="./_app/immutable/assets/0.C1VAPzH1.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/2.CvbIiF7G.css" rel="stylesheet">
+		<link rel="modulepreload" href="./_app/immutable/entry/start.EV97odhp.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/entry.CjLRcySJ.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/runtime.DboeV76f.js">
+		<link rel="modulepreload" href="./_app/immutable/entry/app.C0HcNZsy.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/index-client.Bpi_UXfV.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/disclose-version.CXrSO0el.js">
+		<link rel="modulepreload" href="./_app/immutable/nodes/0.TO2fqEH4.js">
+		<link rel="modulepreload" href="./_app/immutable/nodes/2.DdRtQQE_.js">
+	</head>
+	<body data-sveltekit-preload-data="hover" class="bg-slate-600">
+		<div style="display: contents"><!--[--><!--[--><!--[--><!--[--><!--[--><!--[--><main class="grid grid-cols-6 gap-2 p-4"><div class="col-span-2 flex flex-col"><h1 class="mb-4 text-2xl font-bold">Serial Communication</h1> <div class="mb-2 flex w-full max-w-md flex-row items-center space-x-2"><select class="flex-1 rounded border p-1"><!--[--><!--]--></select> <select class="flex-1 rounded border p-1"><!--[--><!--[--><option value="9600">9600</option><!--]--><!--[--><option value="14400">14400</option><!--]--><!--[--><option value="19200">19200</option><!--]--><!--[--><option value="38400">38400</option><!--]--><!--[--><option value="57600">57600</option><!--]--><!--[--><option value="115200">115200</option><!--]--><!--]--></select> <!--[--><button class="rounded bg-blue-500 px-2 py-1 text-white">Connect</button><!--]!--></div> <textarea readonly class="mb-auto h-48 w-full flex-grow resize-none rounded border bg-slate-900 p-2 text-xs text-white"></textarea></div> <!--[--><canvas class="col-span-4 block h-96 w-full rounded bg-slate-900"></canvas><!--]--> <div class="col-span-full"><!--[--><div class="mx-auto flex w-full flex-col rounded-md bg-gray-900 p-4 font-mono text-xs text-white"><ul class="command-list mb-2 flex-grow space-y-1 overflow-y-auto"><!--[--><!--]--></ul> <form class="flex"><input type="text" placeholder="Type a command and press Enter" value="" class="flex-1 rounded-md bg-gray-800 p-2 text-white outline-none"></form></div><!--]--></div></main><!--]--><!--]--><!--]--><!--]--><!--]--> <!--[--><!--]!--><!--]-->
+			
+			<script>
+				{
+					__sveltekit_1hlpsl0 = {
+						base: new URL(".", location).pathname.slice(0, -1)
+					};
+
+					const element = document.currentScript.parentElement;
+
+					const data = [null,null];
+
+					Promise.all([
+						import("./_app/immutable/entry/start.EV97odhp.js"),
+						import("./_app/immutable/entry/app.C0HcNZsy.js")
+					]).then(([kit, app]) => {
+						kit.start(app, element, {
+							node_ids: [0, 2],
+							data,
+							form: null,
+							error: null
+						});
+					});
+				}
+			</script>
+		</div>
+	</body>
+</html>
