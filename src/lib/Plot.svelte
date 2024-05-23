@@ -2,6 +2,7 @@
 	import { browser } from '$app/environment';
 	import { onDestroy, onMount } from 'svelte';
 	import type { Line } from './line';
+	import type { HTMLCanvasAttributes } from 'svelte/elements';
 
 	interface ProgramInfo {
 		program: WebGLProgram;
@@ -14,7 +15,7 @@
 		};
 	}
 
-	let { lines = [], ...restProps }: { lines: Line[] } = $props();
+	let { lines = [], ...restProps }: { lines: Line[] } & HTMLCanvasAttributes = $props();
 	let canvas = $state<HTMLCanvasElement>();
 	let gl: WebGL2RenderingContext | null = null;
 	let zoom = { x: 1.0, y: 1.0 };
