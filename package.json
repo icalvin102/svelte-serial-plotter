@@ -1,5 +1,5 @@
 {
-	"name": "serial-plotter",
+	"name": "svelte-serial-plotter",
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
