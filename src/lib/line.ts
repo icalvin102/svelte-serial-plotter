@@ -13,8 +13,8 @@ export function createLine(): Line {
 export function createLineGenerator(fn: (t: number) => number) {
 	return (length: number, multiplier = 1) => {
 		const line = createLine();
-		for(let i = 0; i < length; i++) {
-			line.data.push(fn(i*multiplier));
+		for (let i = 0; i < length; i++) {
+			line.data.push(fn(i * multiplier));
 		}
 		return line;
 	};

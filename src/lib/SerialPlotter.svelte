@@ -15,7 +15,12 @@
 	let availablePorts: SerialPort[] = $state([]);
 	let selectedPort: SerialPort | null = $state(null);
 	let baudRate = $state(115200);
-	let lines: Line[] = $state([createSinLine(200, Math.PI/100), createCosLine(200, Math.PI/100), createLine(), createLine()]);
+	let lines: Line[] = $state([
+		createSinLine(200, Math.PI / 100),
+		createCosLine(200, Math.PI / 100),
+		createLine(),
+		createLine()
+	]);
 
 	const boudRates = [9600, 14400, 19200, 38400, 57600, 115200];
 
